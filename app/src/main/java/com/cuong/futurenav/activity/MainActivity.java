@@ -1,54 +1,139 @@
 package com.cuong.futurenav.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.cuong.futurenav.R;
+import com.cuong.futurenav.model.FavSchoolModel;
 import com.cuong.futurenav.model.StudentProfileModel;
 import com.cuong.futurenav.service.MainIntentService;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.List;
-
-import butterknife.Bind;
-import butterknife.ButterKnife;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends BaseAppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener
+        , GoogleMap.OnMarkerClickListener
+        , OnMapReadyCallback{
 
+    //map related
+    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private Map<Integer, Marker> mMapMarkers = new HashMap<Integer, Marker>();
 
-    ImageView mStudentProfileImg;
-    TextView mUserName;
-    TextView mEmail;
+    //show list of fav schools
+    private RecyclerView mRecyclerView;
+    private android.support.v7.widget.LinearLayoutManager mLayoutManager;
+    private SchoolAdapter mAdapter;
+    private TextView mEmptyView;
+
+    //show user info
+    private ImageView mStudentProfileImg;
+    private TextView mUserName;
+    private TextView mEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Intent i = getIntent();
+        //wiring all view components
 
-        StudentProfileModel studentProfile = i.getParcelableExtra(MainIntentService.EXTRA_RESULT_STUDENT_PROFILE);
+        bindMap();
 
+        bindViews();
 
+        bindRecyclerview();
+
+        //view data (text, img) are populated
+        populateViewData();
+
+    }
+
+    private void bindRecyclerview() {
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+
+        // specify an adapter (see also next example)
+        mAdapter = new SchoolAdapter(mEmptyView, this);
+        mRecyclerView.setAdapter(mAdapter);
+
+        //on favorite list, swiping right item will delete school off the list
+        ItemTouchHelper mIth = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0,
+                        ItemTouchHelper.RIGHT) {
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView,
+                                          RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                        return true;// true if moved, false otherwise
+                    }
+
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+//                        Log.d(LOG_TAG, "direction: " + direction);
+//                        Log.d(LOG_TAG, "ItemTouchHelper.RIGHT: " + ItemTouchHelper.RIGHT);
+//                        if (direction == ItemTouchHelper.RIGHT && !mSearchMode) {
+//                            // remove from adapter
+//                            int pos = viewHolder.getAdapterPosition();
+//                            long id = mAdapter.getItemId(pos);
+//                            String[] args = {String.valueOf(id)};
+//                            getActivity().getContentResolver().delete(DBContract.FavoriteEntry.CONTENT_URI, DBContract.FavoriteEntry._ID + " = ? ", args);
+//                            SchoolActivityFragment.this.getLoaderManager().restartLoader(SEARCH_LOADER, null, SchoolActivityFragment.this);
+//                            String website = mAdapter.getWebSite(pos);
+//                            ((MyApplication) getActivity().getApplication()).getmFavoriteSchoolList().remove(website);
+//                            mMapMarkers.get(Integer.valueOf(pos)).remove();
+//                            Toast.makeText(getActivity(),
+//                                    R.string.school_msg_remove,
+//                                    Toast.LENGTH_SHORT).show();
+//                        }
+                    }
+
+                    @Override
+                    public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                        //only enable swipe mode on favorite list, not search result
+                        return super.getSwipeDirs(recyclerView, viewHolder);
+                    }
+
+                });
+        mIth.attachToRecyclerView(mRecyclerView);
+    }
+
+    private void bindViews() {
 
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -72,9 +157,21 @@ public class MainActivity extends BaseAppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         //http://stackoverflow.com/questions/33199764/android-api-23-change-navigation-view-headerlayout-textview
         View headerView = navigationView.getHeaderView(0);
+
         mStudentProfileImg = (ImageView)headerView.findViewById(R.id.imageView);
         mUserName = (TextView)headerView.findViewById(R.id.username);
         mEmail = (TextView)headerView.findViewById(R.id.email);
+
+
+        mEmptyView = (TextView)findViewById(R.id.empty_view);
+        mRecyclerView = (RecyclerView)findViewById(R.id.schoollist);
+
+
+    }
+
+    private void populateViewData() {
+        Intent i = getIntent();
+        StudentProfileModel studentProfile = i.getParcelableExtra(MainIntentService.EXTRA_RESULT_STUDENT_PROFILE);
 
         mUserName.setText(studentProfile.getNameFirst());
         mEmail.setText(studentProfile.getEmail());
@@ -89,14 +186,62 @@ public class MainActivity extends BaseAppCompatActivity
             }
         });
 
-//        Glide.with(this)
-//                .load(studentProfile.getPhotoUrl())
-//                .placeholder(android.R.drawable.sym_def_app_icon)
-//                .centerCrop()
-//                .into(mStudentProfileImg);
+        mAdapter.swapCursor(studentProfile.getListOfFavSchool());
 
+        showSchoolsOnMap(studentProfile.getListOfFavSchool());
 
     }
+
+
+    private void bindMap() {
+        if (mMap == null) {
+
+            SupportMapFragment supportMapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
+            supportMapFragment.getMapAsync(this);
+        }
+
+    }
+
+    private void showSchoolsOnMap(ArrayList<FavSchoolModel> data) {
+
+        mMapMarkers = new HashMap<Integer, Marker>();
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        if (mMap != null) {
+            mMap.clear();
+            for (FavSchoolModel school : data) {
+                String schoolName = school.getSchool().getName();
+                double lon = school.getSchool().getLatitude();
+                double lat = school.getSchool().getLongitude();
+
+                LatLng l = new LatLng(lat, lon);
+
+                Marker marker = mMap.addMarker(new MarkerOptions().position(l).title(schoolName));
+
+                mMapMarkers.put(school.getId(), marker);
+
+                builder.include(l);
+
+            }
+            //re focus map
+            LatLngBounds bounds = builder.build();
+
+            CameraUpdate cu = null;
+            if (mMapMarkers.size() == 0) { //no fav, move map to US
+
+                cu = CameraUpdateFactory.newLatLngBounds(BOUNDS_US, mMapPadding);
+
+            } else if (mMapMarkers.size() == 1)
+                cu = CameraUpdateFactory.newLatLngZoom(mMapMarkers.values().iterator().next().getPosition(), 12F);
+            else
+                cu = CameraUpdateFactory.newLatLngBounds(bounds, mMapPadding);
+
+
+            if (cu != null)
+                mMap.animateCamera(cu);
+        }
+
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -105,6 +250,7 @@ public class MainActivity extends BaseAppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+            finish();
         }
     }
 
@@ -138,8 +284,8 @@ public class MainActivity extends BaseAppCompatActivity
 
         if (id == R.id.nav_signout) {
             signOut();
-        } else if (id == R.id.nav_gallery) {
-
+        } else if (id == R.id.nav_search) {
+            findSchool();
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
@@ -155,8 +301,12 @@ public class MainActivity extends BaseAppCompatActivity
         return true;
     }
 
+    private void findSchool() {
+        startActivity(new Intent(this, SearchActivity.class));
+    }
+
     private void signOut() {
-        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        startActivity(new Intent(this, LoginActivity.class));
     }
 
     @Override
@@ -178,5 +328,37 @@ public class MainActivity extends BaseAppCompatActivity
                 // handle the error;
                 break;
         }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
+        int pos = -1;
+        for (Map.Entry<Integer, Marker> entry : mMapMarkers.entrySet())
+            //assuming title is unique within a list
+            if (marker.getTitle().equals(entry.getValue().getTitle())) {
+                pos = entry.getKey().intValue();
+                break;
+            }
+        if (pos >= 0) {
+            logd("pos: " + pos);
+            mLayoutManager.smoothScrollToPosition(mRecyclerView, null, pos);
+        }
+        return true;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.setMyLocationEnabled(true);
+        mMap.setOnMarkerClickListener(MainActivity.this);
+//        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//        builder.include(new LatLng(28.410307, -123.922802));
+//        builder.include(new LatLng(49.454750, -66.900840));
+//        LatLngBounds bounds = builder.build();
+//
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, mMapPadding));
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(centerUSLatLong));
     }
 }

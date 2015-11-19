@@ -6,3 +6,5 @@
           android:id="@+id/searchmap"
           tools:context=".SearchActivity"
           android:name="com.google.android.gms.maps.SupportMapFragment"/>
+
+

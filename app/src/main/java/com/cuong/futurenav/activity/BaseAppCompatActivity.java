@@ -9,6 +9,8 @@ import android.util.Log;
 
 import com.cuong.futurenav.R;
 import com.cuong.futurenav.service.BaseResultReceiver;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 /**
  * Created by Cuong on 9/10/2015.
@@ -17,6 +19,11 @@ import com.cuong.futurenav.service.BaseResultReceiver;
 public abstract class BaseAppCompatActivity extends AppCompatActivity implements BaseResultReceiver.Receiver{
 
     protected BaseResultReceiver mReceiver;
+
+    protected static final LatLngBounds BOUNDS_US = new LatLngBounds(
+            new LatLng(28.410307, -123.922802), new LatLng(49.454750, -66.900840));
+    protected static final int mMapPadding = 100;
+    protected static final LatLng centerUSLatLong = new LatLng(37.09024, -95.712891);
 
     protected ProgressDialog mProgressDialog;
 

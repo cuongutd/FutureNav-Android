@@ -5,7 +5,6 @@ import android.os.Parcelable;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Cuong on 11/17/2015.
@@ -28,7 +27,7 @@ public class StudentProfileModel implements Parcelable {
     private String networkUserId;
     private String networkGroup;
     private String photoUrl;
-    private List<FavSchoolModel> listOfFavSchool;
+    private ArrayList<FavSchoolModel> listOfFavSchool;
 
     public StudentProfileModel() {
     }
@@ -137,11 +136,11 @@ public class StudentProfileModel implements Parcelable {
         return this.auUpdatedBy;
     }
 
-    public void setListOfFavSchool(List<FavSchoolModel> listOfFavSchool) {
+    public void setListOfFavSchool(ArrayList<FavSchoolModel> listOfFavSchool) {
         this.listOfFavSchool = listOfFavSchool;
     }
 
-    public List<FavSchoolModel> getListOfFavSchool() {
+    public ArrayList<FavSchoolModel> getListOfFavSchool() {
         return this.listOfFavSchool;
     }
 
