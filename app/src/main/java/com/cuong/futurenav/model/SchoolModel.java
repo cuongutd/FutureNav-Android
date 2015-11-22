@@ -3,7 +3,9 @@ package com.cuong.futurenav.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Cuong on 11/17/2015.
@@ -32,47 +34,12 @@ public class SchoolModel implements Parcelable {
     private Double latitude;
     private Date auCreatedDt;
     private Date auUpdatedDt;
-
-    public SchoolModel() {
-    }
-
-    public SchoolModel(String name, String type, Date established, boolean active, Date auCreatedDt, Date auUpdatedDt) {
-        this.name = name;
-        this.type = type;
-        this.established = established;
-        this.active = active;
-        this.auCreatedDt = auCreatedDt;
-        this.auUpdatedDt = auUpdatedDt;
-    }
-
-    public SchoolModel(String name, String type, String relegious, Date established, boolean active, Byte gradeFrom,
-                       Byte gradeTo, String website, String gender, String crestUrl, String slogan, String street, String city,
-                       String state, String country, String zip, Double longitude, Double latitude, Date auCreatedDt,
-                       Date auUpdatedDt) {
-        this.name = name;
-        this.type = type;
-        this.relegious = relegious;
-        this.established = established;
-        this.active = active;
-        this.gradeFrom = gradeFrom;
-        this.gradeTo = gradeTo;
-        this.website = website;
-        this.gender = gender;
-        this.crestUrl = crestUrl;
-        this.slogan = slogan;
-        this.street = street;
-        this.city = city;
-        this.state = state;
-        this.countrycode = country;
-        this.zip = zip;
-        this.longitude = longitude;
-        this.latitude = latitude;
-        this.auCreatedDt = auCreatedDt;
-        this.auUpdatedDt = auUpdatedDt;
-    }
+    private List<SchoolDetailModel> listOfSchoolDetail;
+    private String contactNumber;
+    private String email;
 
     public Integer getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Integer id) {
@@ -80,7 +47,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public void setName(String name) {
@@ -88,7 +55,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getType() {
-        return this.type;
+        return type;
     }
 
     public void setType(String type) {
@@ -96,7 +63,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getRelegious() {
-        return this.relegious;
+        return relegious;
     }
 
     public void setRelegious(String relegious) {
@@ -104,7 +71,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public Date getEstablished() {
-        return this.established;
+        return established;
     }
 
     public void setEstablished(Date established) {
@@ -112,7 +79,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public boolean isActive() {
-        return this.active;
+        return active;
     }
 
     public void setActive(boolean active) {
@@ -120,7 +87,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public Byte getGradeFrom() {
-        return this.gradeFrom;
+        return gradeFrom;
     }
 
     public void setGradeFrom(Byte gradeFrom) {
@@ -128,7 +95,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public Byte getGradeTo() {
-        return this.gradeTo;
+        return gradeTo;
     }
 
     public void setGradeTo(Byte gradeTo) {
@@ -136,7 +103,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getWebsite() {
-        return this.website;
+        return website;
     }
 
     public void setWebsite(String website) {
@@ -144,7 +111,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getGender() {
-        return this.gender;
+        return gender;
     }
 
     public void setGender(String gender) {
@@ -152,7 +119,7 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getCrestUrl() {
-        return this.crestUrl;
+        return crestUrl;
     }
 
     public void setCrestUrl(String crestUrl) {
@@ -160,43 +127,11 @@ public class SchoolModel implements Parcelable {
     }
 
     public String getSlogan() {
-        return this.slogan;
+        return slogan;
     }
 
     public void setSlogan(String slogan) {
         this.slogan = slogan;
-    }
-
-    public Double getLongitude() {
-        return this.longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public Double getLatitude() {
-        return this.latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Date getAuCreatedDt() {
-        return this.auCreatedDt;
-    }
-
-    public void setAuCreatedDt(Date auCreatedDt) {
-        this.auCreatedDt = auCreatedDt;
-    }
-
-    public Date getAuUpdatedDt() {
-        return this.auUpdatedDt;
-    }
-
-    public void setAuUpdatedDt(Date auUpdatedDt) {
-        this.auUpdatedDt = auUpdatedDt;
     }
 
     public String getStreet() {
@@ -239,32 +174,62 @@ public class SchoolModel implements Parcelable {
         this.zip = zip;
     }
 
-    protected SchoolModel(Parcel in) {
-        id = in.readByte() == 0x00 ? null : in.readInt();
-        name = in.readString();
-        type = in.readString();
-        relegious = in.readString();
-        long tmpEstablished = in.readLong();
-        established = tmpEstablished != -1 ? new Date(tmpEstablished) : null;
-        active = in.readByte() != 0x00;
-        gradeFrom = in.readByte() == 0x00 ? null : in.readByte();
-        gradeTo = in.readByte() == 0x00 ? null : in.readByte();
-        website = in.readString();
-        gender = in.readString();
-        crestUrl = in.readString();
-        slogan = in.readString();
-        street = in.readString();
-        city = in.readString();
-        state = in.readString();
-        countrycode = in.readString();
-        zip = in.readString();
-        longitude = in.readByte() == 0x00 ? null : in.readDouble();
-        latitude = in.readByte() == 0x00 ? null : in.readDouble();
-        long tmpAuCreatedDt = in.readLong();
-        auCreatedDt = tmpAuCreatedDt != -1 ? new Date(tmpAuCreatedDt) : null;
-        long tmpAuUpdatedDt = in.readLong();
-        auUpdatedDt = tmpAuUpdatedDt != -1 ? new Date(tmpAuUpdatedDt) : null;
+    public Double getLongitude() {
+        return longitude;
     }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Date getAuCreatedDt() {
+        return auCreatedDt;
+    }
+
+    public void setAuCreatedDt(Date auCreatedDt) {
+        this.auCreatedDt = auCreatedDt;
+    }
+
+    public Date getAuUpdatedDt() {
+        return auUpdatedDt;
+    }
+
+    public void setAuUpdatedDt(Date auUpdatedDt) {
+        this.auUpdatedDt = auUpdatedDt;
+    }
+
+    public List<SchoolDetailModel> getListOfSchoolDetail() {
+        return listOfSchoolDetail;
+    }
+
+    public void setListOfSchoolDetail(List<SchoolDetailModel> listOfSchoolDetail) {
+        this.listOfSchoolDetail = listOfSchoolDetail;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
 
     @Override
     public int describeContents() {
@@ -273,62 +238,71 @@ public class SchoolModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        if (id == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeInt(id);
-        }
-        dest.writeString(name);
-        dest.writeString(type);
-        dest.writeString(relegious);
-        dest.writeLong(established != null ? established.getTime() : -1L);
-        dest.writeByte((byte) (active ? 0x01 : 0x00));
-        if (gradeFrom == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeByte(gradeFrom);
-        }
-        if (gradeTo == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeByte(gradeTo);
-        }
-        dest.writeString(website);
-        dest.writeString(gender);
-        dest.writeString(crestUrl);
-        dest.writeString(slogan);
-        dest.writeString(street);
-        dest.writeString(city);
-        dest.writeString(state);
-        dest.writeString(countrycode);
-        dest.writeString(zip);
-        if (longitude == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeDouble(longitude);
-        }
-        if (latitude == null) {
-            dest.writeByte((byte) (0x00));
-        } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeDouble(latitude);
-        }
-        dest.writeLong(auCreatedDt != null ? auCreatedDt.getTime() : -1L);
-        dest.writeLong(auUpdatedDt != null ? auUpdatedDt.getTime() : -1L);
+        dest.writeValue(this.id);
+        dest.writeString(this.name);
+        dest.writeString(this.type);
+        dest.writeString(this.relegious);
+        dest.writeLong(established != null ? established.getTime() : -1);
+        dest.writeByte(active ? (byte)1 : (byte)0);
+        dest.writeValue(this.gradeFrom);
+        dest.writeValue(this.gradeTo);
+        dest.writeString(this.website);
+        dest.writeString(this.gender);
+        dest.writeString(this.crestUrl);
+        dest.writeString(this.slogan);
+        dest.writeString(this.street);
+        dest.writeString(this.city);
+        dest.writeString(this.state);
+        dest.writeString(this.countrycode);
+        dest.writeString(this.zip);
+        dest.writeValue(this.longitude);
+        dest.writeValue(this.latitude);
+        dest.writeLong(auCreatedDt != null ? auCreatedDt.getTime() : -1);
+        dest.writeLong(auUpdatedDt != null ? auUpdatedDt.getTime() : -1);
+        dest.writeList(this.listOfSchoolDetail);
+        dest.writeString(this.contactNumber);
+        dest.writeString(this.email);
     }
 
-    @SuppressWarnings("unused")
+    public SchoolModel() {
+    }
+
+    protected SchoolModel(Parcel in) {
+        this.id = (Integer)in.readValue(Integer.class.getClassLoader());
+        this.name = in.readString();
+        this.type = in.readString();
+        this.relegious = in.readString();
+        long tmpEstablished = in.readLong();
+        this.established = tmpEstablished == -1 ? null : new Date(tmpEstablished);
+        this.active = in.readByte() != 0;
+        this.gradeFrom = (Byte)in.readValue(Byte.class.getClassLoader());
+        this.gradeTo = (Byte)in.readValue(Byte.class.getClassLoader());
+        this.website = in.readString();
+        this.gender = in.readString();
+        this.crestUrl = in.readString();
+        this.slogan = in.readString();
+        this.street = in.readString();
+        this.city = in.readString();
+        this.state = in.readString();
+        this.countrycode = in.readString();
+        this.zip = in.readString();
+        this.longitude = (Double)in.readValue(Double.class.getClassLoader());
+        this.latitude = (Double)in.readValue(Double.class.getClassLoader());
+        long tmpAuCreatedDt = in.readLong();
+        this.auCreatedDt = tmpAuCreatedDt == -1 ? null : new Date(tmpAuCreatedDt);
+        long tmpAuUpdatedDt = in.readLong();
+        this.auUpdatedDt = tmpAuUpdatedDt == -1 ? null : new Date(tmpAuUpdatedDt);
+        this.listOfSchoolDetail = new ArrayList<SchoolDetailModel>();
+        in.readList(this.listOfSchoolDetail, List.class.getClassLoader());
+        this.contactNumber = in.readString();
+        this.email = in.readString();
+    }
+
     public static final Parcelable.Creator<SchoolModel> CREATOR = new Parcelable.Creator<SchoolModel>() {
-        @Override
-        public SchoolModel createFromParcel(Parcel in) {
-            return new SchoolModel(in);
+        public SchoolModel createFromParcel(Parcel source) {
+            return new SchoolModel(source);
         }
 
-        @Override
         public SchoolModel[] newArray(int size) {
             return new SchoolModel[size];
         }

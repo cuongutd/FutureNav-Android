@@ -15,40 +15,32 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.cuong.futurenav.R;
+import com.cuong.futurenav.activity.adapter.SchoolAdapter;
 import com.cuong.futurenav.model.FavSchoolModel;
+import com.cuong.futurenav.model.SchoolModel;
 import com.cuong.futurenav.model.StudentProfileModel;
 import com.cuong.futurenav.service.MainIntentService;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.cuong.futurenav.util.Constants;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends BaseAppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener
-        , GoogleMap.OnMarkerClickListener
-        , OnMapReadyCallback{
+public class MainActivity extends BaseAppCompatActivity  implements NavigationView.OnNavigationItemSelectedListener{
 
-    //map related
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private Map<Integer, Marker> mMapMarkers = new HashMap<Integer, Marker>();
+
 
     //show list of fav schools
     private RecyclerView mRecyclerView;
@@ -68,15 +60,23 @@ public class MainActivity extends BaseAppCompatActivity
 
         //wiring all view components
 
-        bindMap();
+        bindMap(R.id.map);
 
         bindViews();
 
         bindRecyclerview();
 
         //view data (text, img) are populated
-        populateViewData();
+        if (getStudentProfile() != null)
+            populateViewData();
+        else {
+            logd("profile is null! check saved instance");
 
+            if (savedInstanceState != null && savedInstanceState.containsKey(Constants.EXTRA_STUDENT_PROFILE)) {
+                StudentProfileModel profile = savedInstanceState.getParcelable(Constants.EXTRA_STUDENT_PROFILE);
+                setStudentProfile(profile);
+            }
+        }
     }
 
     private void bindRecyclerview() {
@@ -105,22 +105,19 @@ public class MainActivity extends BaseAppCompatActivity
 
                     @Override
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-//                        Log.d(LOG_TAG, "direction: " + direction);
-//                        Log.d(LOG_TAG, "ItemTouchHelper.RIGHT: " + ItemTouchHelper.RIGHT);
-//                        if (direction == ItemTouchHelper.RIGHT && !mSearchMode) {
-//                            // remove from adapter
-//                            int pos = viewHolder.getAdapterPosition();
-//                            long id = mAdapter.getItemId(pos);
-//                            String[] args = {String.valueOf(id)};
-//                            getActivity().getContentResolver().delete(DBContract.FavoriteEntry.CONTENT_URI, DBContract.FavoriteEntry._ID + " = ? ", args);
-//                            SchoolActivityFragment.this.getLoaderManager().restartLoader(SEARCH_LOADER, null, SchoolActivityFragment.this);
-//                            String website = mAdapter.getWebSite(pos);
-//                            ((MyApplication) getActivity().getApplication()).getmFavoriteSchoolList().remove(website);
-//                            mMapMarkers.get(Integer.valueOf(pos)).remove();
-//                            Toast.makeText(getActivity(),
-//                                    R.string.school_msg_remove,
-//                                    Toast.LENGTH_SHORT).show();
-//                        }
+
+                        //remove from favorite list if user swipe right
+
+                        int pos = viewHolder.getAdapterPosition();
+
+                        Integer favId = mAdapter.getFavId(pos);
+
+                        MainIntentService.unFav(mReceiver, MainActivity.this, favId, getStudentProfile().getId());
+
+                        Toast.makeText(MainActivity.this,
+                                R.string.school_unfaved_msg,
+                                Toast.LENGTH_LONG).show();
+
                     }
 
                     @Override
@@ -142,8 +139,7 @@ public class MainActivity extends BaseAppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                startActivity(new Intent(MainActivity.this, SearchActivity.class));
             }
         });
 
@@ -170,13 +166,11 @@ public class MainActivity extends BaseAppCompatActivity
     }
 
     private void populateViewData() {
-        Intent i = getIntent();
-        StudentProfileModel studentProfile = i.getParcelableExtra(MainIntentService.EXTRA_RESULT_STUDENT_PROFILE);
 
-        mUserName.setText(studentProfile.getNameFirst());
-        mEmail.setText(studentProfile.getEmail());
+        mUserName.setText(getStudentProfile().getNameFirst());
+        mEmail.setText(getStudentProfile().getEmail());
 
-        Glide.with(this).load(studentProfile.getPhotoUrl()).asBitmap().override(96, 96).centerCrop().into(new BitmapImageViewTarget(mStudentProfileImg) {
+        Glide.with(this).load(getStudentProfile().getPhotoUrl()).asBitmap().override(96, 96).centerCrop().into(new BitmapImageViewTarget(mStudentProfileImg) {
             @Override
             protected void setResource(Bitmap resource) {
                 RoundedBitmapDrawable circularBitmapDrawable =
@@ -186,62 +180,25 @@ public class MainActivity extends BaseAppCompatActivity
             }
         });
 
-        mAdapter.swapCursor(studentProfile.getListOfFavSchool());
-
-        showSchoolsOnMap(studentProfile.getListOfFavSchool());
+        mAdapter.swapCursor(getStudentProfile().getListOfFavSchool());
 
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        super.onMapReady(googleMap);
 
-    private void bindMap() {
-        if (mMap == null) {
+        if (getStudentProfile() == null)
+            return;
 
-            SupportMapFragment supportMapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
-            supportMapFragment.getMapAsync(this);
+        ArrayList<SchoolModel> s = new ArrayList<>();
+        for (FavSchoolModel v: getStudentProfile().getListOfFavSchool()){
+            s.add(v.getSchool());
         }
 
-    }
-
-    private void showSchoolsOnMap(ArrayList<FavSchoolModel> data) {
-
-        mMapMarkers = new HashMap<Integer, Marker>();
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        if (mMap != null) {
-            mMap.clear();
-            for (FavSchoolModel school : data) {
-                String schoolName = school.getSchool().getName();
-                double lon = school.getSchool().getLatitude();
-                double lat = school.getSchool().getLongitude();
-
-                LatLng l = new LatLng(lat, lon);
-
-                Marker marker = mMap.addMarker(new MarkerOptions().position(l).title(schoolName));
-
-                mMapMarkers.put(school.getId(), marker);
-
-                builder.include(l);
-
-            }
-            //re focus map
-            LatLngBounds bounds = builder.build();
-
-            CameraUpdate cu = null;
-            if (mMapMarkers.size() == 0) { //no fav, move map to US
-
-                cu = CameraUpdateFactory.newLatLngBounds(BOUNDS_US, mMapPadding);
-
-            } else if (mMapMarkers.size() == 1)
-                cu = CameraUpdateFactory.newLatLngZoom(mMapMarkers.values().iterator().next().getPosition(), 12F);
-            else
-                cu = CameraUpdateFactory.newLatLngBounds(bounds, mMapPadding);
-
-
-            if (cu != null)
-                mMap.animateCamera(cu);
-        }
+        showSchoolsOnMap(s);
 
     }
-
 
     @Override
     public void onBackPressed() {
@@ -286,14 +243,14 @@ public class MainActivity extends BaseAppCompatActivity
             signOut();
         } else if (id == R.id.nav_search) {
             findSchool();
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
+//        } else if (id == R.id.nav_slideshow) {
+//
+//        } else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
-
+//        } else if (id == R.id.nav_send) {
+//
         }
 
         DrawerLayout drawer = (DrawerLayout)findViewById(R.id.drawer_layout);
@@ -305,60 +262,51 @@ public class MainActivity extends BaseAppCompatActivity
         startActivity(new Intent(this, SearchActivity.class));
     }
 
-    private void signOut() {
-        startActivity(new Intent(this, LoginActivity.class));
-    }
-
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         switch (resultCode) {
-            case MainIntentService.RESULT_CODE_START:
-                showProgressDialog();
+            case Constants.RESULT_CODE_STUDENT_PROFILE:
+                StudentProfileModel studentProfile = resultData.getParcelable(Constants.EXTRA_STUDENT_PROFILE);
+                setStudentProfile(studentProfile);
+                populateViewData();
                 break;
-            case MainIntentService.RESULT_CODE_RUNNING:
-                //show progress
-                break;
-            case MainIntentService.RESULT_CODE_COMPLETED:
-                StudentProfileModel studentProfile = resultData.getParcelable(MainIntentService.EXTRA_RESULT_STUDENT_PROFILE);
-                // do something interesting
-                // hide progress
-                hideProgressDialog();
-                break;
-            case MainIntentService.RESULT_CODE_FAILED:
-                // handle the error;
-                break;
+
         }
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        marker.showInfoWindow();
-        int pos = -1;
-        for (Map.Entry<Integer, Marker> entry : mMapMarkers.entrySet())
-            //assuming title is unique within a list
-            if (marker.getTitle().equals(entry.getValue().getTitle())) {
-                pos = entry.getKey().intValue();
-                break;
-            }
+
+        int schoolId = getSchoolIdFromMarker(marker);
+        int pos = mAdapter.getPosition(schoolId);
         if (pos >= 0) {
             logd("pos: " + pos);
             mLayoutManager.smoothScrollToPosition(mRecyclerView, null, pos);
         }
-        return true;
+
+        return super.onMarkerClick(marker);
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
-        mMap.setOnMarkerClickListener(MainActivity.this);
-//        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-//        builder.include(new LatLng(28.410307, -123.922802));
-//        builder.include(new LatLng(49.454750, -66.900840));
-//        LatLngBounds bounds = builder.build();
-//
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, mMapPadding));
+    protected void onStart() {
+        super.onStart();
+        if (getStudentProfile() != null)
+            mAdapter.swapCursor(getStudentProfile().getListOfFavSchool());
+    }
 
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(centerUSLatLong));
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        //go to detail screen
+        Intent i = new Intent(this, DetailActivity.class);
+        int schoolId = getSchoolIdFromMarker(marker);
+        SchoolModel schoolDetail = mAdapter.getSchoolFromSchoolId(schoolId);
+        i.putExtra(Constants.EXTRA_SCHOOL_DETAIL, schoolDetail);
+        startActivity(i);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(Constants.EXTRA_STUDENT_PROFILE, getStudentProfile());
     }
 }

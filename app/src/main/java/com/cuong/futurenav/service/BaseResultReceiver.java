@@ -19,6 +19,10 @@ public class BaseResultReceiver extends ResultReceiver {
         mReceiver = receiver;
     }
 
+    public boolean isNull(){
+        return (mReceiver == null);
+    }
+
     public interface Receiver {
         public void onReceiveResult(int resultCode, Bundle resultData);
     }

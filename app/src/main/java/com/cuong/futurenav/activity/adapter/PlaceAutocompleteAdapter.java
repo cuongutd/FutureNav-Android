@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.cuong.futurenav.activity;
+package com.cuong.futurenav.activity.adapter;
 
 import android.content.Context;
 import android.util.Log;
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Adapter that handles Autocomplete requests from the Places Geo Data API.
- * Results are encoded as {@link com.cuong.futurenav.activity.PlaceAutocompleteAdapter.PlaceAutocomplete}
+ * Results are encoded as {@link PlaceAutocompleteAdapter.PlaceAutocomplete}
  * objects
  * that contain both the Place ID and the text description from the autocomplete query.
  * <p>
@@ -54,6 +54,10 @@ public class PlaceAutocompleteAdapter
      * Current results returned by this adapter.
      */
     private ArrayList<PlaceAutocomplete> mResultList;
+
+
+
+
 
     /**
      * Handles autocomplete requests.
@@ -144,7 +148,7 @@ public class PlaceAutocompleteAdapter
 
     /**
      * Submits an autocomplete query to the Places Geo Data Autocomplete API.
-     * Results are returned as {@link com.cuong.futurenav.activity.PlaceAutocompleteAdapter.PlaceAutocomplete}
+     * Results are returned as {@link PlaceAutocompleteAdapter.PlaceAutocomplete}
      * objects to store the Place ID and description that the API returns.
      * Returns an empty list if no results were found.
      * Returns null if the API client is not available or the query did not complete

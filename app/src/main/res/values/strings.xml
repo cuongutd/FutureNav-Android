@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">FutureNav</string>
+    <string name="app_name">Future Nav</string>
     <string name="title_activity_search">Search for school</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">Saved Schools</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -25,4 +25,25 @@
     <string name="server_client_id">654674175844-3b2ds1pblsb7k8cajp8vbtc3jkhncni2.apps.googleusercontent.com</string>
     <string name="autocomplete_hint">Enter location name or address</string>
     <string name="activity_trans">activity_trans</string>
+    <string name="title_activity_detail">School Information</string>
+
+    <string name="schoollabel_website">Website:</string>
+    <string name="schoollabel_level">Levels:</string>
+    <string name="schoollabel_type">Type:</string>
+    <string name="schoollabel_gender">Gender:</string>
+    <string name="schoollabel_classsize">Class size:</string>
+    <string name="schoollabel_ratio">Student/Teacher ratio:</string>
+    <string name="schoollabel_nostudent">No. Students:</string>
+    <string name="schoollabel_contactnumber">Contact:</string>
+    <string name="schoollabel_email">Email:</string>
+    <string name="schoollabel_sat">Average SAT score:</string>
+    <string name="schoollabel_tuition">Tuition:</string>
+
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="search">search</string>
+    <string name="school_faved_msg">School has been saved!</string>
+    <string name="school_unfaved_msg">School removed from saved list!</string>
+
 </resources>

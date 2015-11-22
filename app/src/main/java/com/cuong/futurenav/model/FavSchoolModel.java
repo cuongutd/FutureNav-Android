@@ -18,9 +18,6 @@ public class FavSchoolModel implements Parcelable {
     private Integer auUpdatedBy;
     private SchoolModel school;
 
-    public FavSchoolModel() {
-    }
-
     public void setId(Integer id) {
         this.id = id;
     }
@@ -88,33 +85,20 @@ public class FavSchoolModel implements Parcelable {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("[");
-        sb.append(this.id);
+        sb.append(id);
         sb.append("]:");
-        sb.append(this.affiliateType);
+        sb.append(affiliateType);
         sb.append("|");
-        sb.append(this.note);
+        sb.append(note);
         sb.append("|");
-        sb.append(this.auCreatedDt);
+        sb.append(auCreatedDt);
         sb.append("|");
-        sb.append(this.auUpdatedDt);
+        sb.append(auUpdatedDt);
         sb.append("|");
-        sb.append(this.auCreatedBy);
+        sb.append(auCreatedBy);
         sb.append("|");
-        sb.append(this.auUpdatedBy);
+        sb.append(auUpdatedBy);
         return sb.toString();
-    }
-
-    protected FavSchoolModel(Parcel in) {
-        id = in.readByte() == 0x00 ? null : in.readInt();
-        affiliateType = in.readString();
-        note = in.readString();
-        long tmpAuCreatedDt = in.readLong();
-        auCreatedDt = tmpAuCreatedDt != -1 ? new Date(tmpAuCreatedDt) : null;
-        long tmpAuUpdatedDt = in.readLong();
-        auUpdatedDt = tmpAuUpdatedDt != -1 ? new Date(tmpAuUpdatedDt) : null;
-        auCreatedBy = in.readByte() == 0x00 ? null : in.readInt();
-        auUpdatedBy = in.readByte() == 0x00 ? null : in.readInt();
-        school = (SchoolModel)in.readValue(SchoolModel.class.getClassLoader());
     }
 
     @Override
@@ -124,39 +108,37 @@ public class FavSchoolModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        if (id == null) {
-            dest.writeByte((byte)(0x00));
-        } else {
-            dest.writeByte((byte)(0x01));
-            dest.writeInt(id);
-        }
-        dest.writeString(affiliateType);
-        dest.writeString(note);
-        dest.writeLong(auCreatedDt != null ? auCreatedDt.getTime() : -1L);
-        dest.writeLong(auUpdatedDt != null ? auUpdatedDt.getTime() : -1L);
-        if (auCreatedBy == null) {
-            dest.writeByte((byte)(0x00));
-        } else {
-            dest.writeByte((byte)(0x01));
-            dest.writeInt(auCreatedBy);
-        }
-        if (auUpdatedBy == null) {
-            dest.writeByte((byte)(0x00));
-        } else {
-            dest.writeByte((byte)(0x01));
-            dest.writeInt(auUpdatedBy);
-        }
-        dest.writeValue(school);
+        dest.writeValue(this.id);
+        dest.writeString(this.affiliateType);
+        dest.writeString(this.note);
+        dest.writeLong(auCreatedDt != null ? auCreatedDt.getTime() : -1);
+        dest.writeLong(auUpdatedDt != null ? auUpdatedDt.getTime() : -1);
+        dest.writeValue(this.auCreatedBy);
+        dest.writeValue(this.auUpdatedBy);
+        dest.writeParcelable(this.school, 0);
     }
 
-    @SuppressWarnings("unused")
+    public FavSchoolModel() {
+    }
+
+    protected FavSchoolModel(Parcel in) {
+        this.id = (Integer)in.readValue(Integer.class.getClassLoader());
+        this.affiliateType = in.readString();
+        this.note = in.readString();
+        long tmpAuCreatedDt = in.readLong();
+        this.auCreatedDt = tmpAuCreatedDt == -1 ? null : new Date(tmpAuCreatedDt);
+        long tmpAuUpdatedDt = in.readLong();
+        this.auUpdatedDt = tmpAuUpdatedDt == -1 ? null : new Date(tmpAuUpdatedDt);
+        this.auCreatedBy = (Integer)in.readValue(Integer.class.getClassLoader());
+        this.auUpdatedBy = (Integer)in.readValue(Integer.class.getClassLoader());
+        this.school = in.readParcelable(SchoolModel.class.getClassLoader());
+    }
+
     public static final Parcelable.Creator<FavSchoolModel> CREATOR = new Parcelable.Creator<FavSchoolModel>() {
-        @Override
-        public FavSchoolModel createFromParcel(Parcel in) {
-            return new FavSchoolModel(in);
+        public FavSchoolModel createFromParcel(Parcel source) {
+            return new FavSchoolModel(source);
         }
 
-        @Override
         public FavSchoolModel[] newArray(int size) {
             return new FavSchoolModel[size];
         }

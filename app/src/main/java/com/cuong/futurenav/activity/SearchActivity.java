@@ -1,33 +1,34 @@
 package com.cuong.futurenav.activity;
 
-import android.support.v4.app.FragmentActivity;
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
+import android.view.Menu;
 import android.widget.AutoCompleteTextView;
-import android.widget.ImageView;
 
 import com.cuong.futurenav.R;
+import com.cuong.futurenav.activity.adapter.PlaceAutocompleteAdapter;
+import com.cuong.futurenav.activity.adapter.PlaceSearchAdapter;
 import com.cuong.futurenav.model.MapLocation;
+import com.cuong.futurenav.model.SchoolModel;
 import com.cuong.futurenav.service.GooglePlacesHelper;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.cuong.futurenav.service.MainIntentService;
+import com.cuong.futurenav.service.SuggestionListener;
+import com.cuong.futurenav.util.Constants;
+import com.google.android.gms.maps.model.Marker;
 
-public class SearchActivity extends BaseAppCompatActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener {
+import java.util.ArrayList;
 
-    private GoogleMap mMap;
-    private MapLocation mSeachLoc;
+public class SearchActivity extends BaseAppCompatActivity{
+
     private PlaceAutocompleteAdapter mPlaceAdapter;
-    protected GoogleApiClient mGoogleApiClient;
     private AutoCompleteTextView mAutocompleteView;
-    private ImageView mGoogleLogo;
+
+    PlaceSearchAdapter newAdapter;
 
 
     @Override
@@ -36,47 +37,61 @@ public class SearchActivity extends BaseAppCompatActivity implements OnMapReadyC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        bindMap(R.id.searchmap);
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment)getSupportFragmentManager()
-                .findFragmentById(R.id.searchmap);
-        mapFragment.getMapAsync(this);
-    }
+        initSearchTextview();
 
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(centerUSLatLong));
     }
 
     @Override
-    public void onReceiveResult(int resultCode, Bundle resultData) {
+    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.search, menu);
+//
+//        // Associate searchable configuration with the SearchView
+//        SearchManager searchManager =
+//                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+//        SearchView searchView =
+//                (SearchView) menu.findItem(R.id.search).getActionView();
+//        searchView.setSearchableInfo(
+//                searchManager.getSearchableInfo(getComponentName()));
+//
+//        searchView.setSuggestionsAdapter(newAdapter);
+//
+//        searchView.setOnSuggestionListener(new SuggestionListener(mGoogleApiClient, mReceiver, newAdapter));
+//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//
+//            @Override
+//            public boolean onQueryTextChange(String query) {
+//
+//                logd("onQueryTextChange");
+//                if (query != null && query.length() > 0)
+//                    newAdapter.getFilter().filter(query);
+//
+//                return true;
+//
+//            }
+//
+//            @Override
+//            public boolean onQueryTextSubmit(String query) {
+//
+//                logd("onQueryTextSubmit");
+//
+//                return true;
+//
+//            }
+//
+//        });
 
+        return true;
     }
 
-    private void initSearchTextview(View root) {
-
-        //from google place api sample PlaceComplete
-        mGoogleLogo = (ImageView) root.findViewById(R.id.powerbygoogle);
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this) //so that it will connect when activity start and dis when stop
-                .addApi(Places.GEO_DATA_API)
-                .build();
+    private void initSearchTextview() {
 
         // Retrieve the AutoCompleteTextView that will display Place suggestions.
-        mAutocompleteView = (AutoCompleteTextView) root.findViewById(R.id.autocomplete_places);
+        mAutocompleteView = (AutoCompleteTextView) findViewById(R.id.autocomplete_places);
         // Register a listener that receives callbacks when a suggestion has been selected
 
         // Set up the adapter that will retrieve suggestions from the Places Geo Data API that cover
@@ -86,16 +101,64 @@ public class SearchActivity extends BaseAppCompatActivity implements OnMapReadyC
 
         mAutocompleteView.setAdapter(mPlaceAdapter);
 
-        GooglePlacesHelper mAutocompleteClickListener = new GooglePlacesHelper(mGoogleApiClient, mSeachLoc, mPlaceAdapter);
+        GooglePlacesHelper mAutocompleteClickListener = new GooglePlacesHelper(mGoogleApiClient, mReceiver, mPlaceAdapter);
         mAutocompleteView.setOnItemClickListener(mAutocompleteClickListener);
+
+
+
+        //new experiment
+
+        //newAdapter = new PlaceSearchAdapter(this, null, mGoogleApiClient, BOUNDS_US);
+
 
 
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
-        // be available.
-        logd("onConnectionFailed:" + connectionResult);
+    public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
+        return true;
     }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        //go to detail screen
+        Intent i = new Intent(this, DetailActivity.class);
+        int schoolId = getSchoolIdFromMarker(marker);
+
+        MainIntentService.getSchoolInfo(mReceiver, this, schoolId);
+
+    }
+
+
+    @Override
+    public void onReceiveResult(int resultCode, Bundle resultData) {
+
+        switch(resultCode) {
+            case Constants.RESULT_CODE_GOOGLE_PLACE:
+                //Google places  api return new search location, start calling ws to get new school list
+                MapLocation loc = resultData.getParcelable(Constants.EXTRA_GOOGLE_PLACE);
+
+                MainIntentService.findSchool(mReceiver, this, loc.getmSearchLat().toString(), loc.getmSearchLong().toString());
+                break;
+            case Constants.RESULT_CODE_SCHOOL_LIST:
+                //show on the map
+                ArrayList<SchoolModel> schools = resultData.getParcelableArrayList(Constants.EXTRA_SCHOOL_LIST);
+                showSchoolsOnMap(schools);
+                break;
+            case Constants.RESULT_CODE_SCHOOL_DETAIL:
+                //show on the map
+                SchoolModel schoolDetail = resultData.getParcelable(Constants.EXTRA_SCHOOL_DETAIL);
+                Intent i = new Intent(this, DetailActivity.class);
+                i.putExtra(Constants.EXTRA_SCHOOL_DETAIL, schoolDetail);
+                startActivity(i);
+                break;
+        }
+    }
+
+
+
+
+
+
 }

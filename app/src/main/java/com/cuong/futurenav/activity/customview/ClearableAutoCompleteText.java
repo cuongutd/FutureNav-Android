@@ -1,4 +1,4 @@
-package com.cuong.futurenav.util;
+package com.cuong.futurenav.activity.customview;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;

@@ -2,12 +2,10 @@ package com.cuong.futurenav.service;
 
 import android.os.Bundle;
 import android.support.v4.os.ResultReceiver;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 
-import com.cuong.futurenav.activity.adapter.PlaceAutocompleteAdapter;
-import com.cuong.futurenav.activity.SearchActivity;
+import com.cuong.futurenav.activity.adapter.PlaceSearchAdapter;
 import com.cuong.futurenav.model.MapLocation;
 import com.cuong.futurenav.util.Constants;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -18,43 +16,50 @@ import com.google.android.gms.location.places.PlaceBuffer;
 import com.google.android.gms.location.places.Places;
 
 /**
- * Created by Cuong on 11/18/2015.
+ * Created by Cuong on 11/20/2015.
  */
-public class GooglePlacesHelper implements AdapterView.OnItemClickListener, ResultCallback<PlaceBuffer> {
+public class SuggestionListener implements SearchView.OnSuggestionListener, ResultCallback<PlaceBuffer> {
 
     private GoogleApiClient mGoogleApiClient;
-    private PlaceAutocompleteAdapter mPlaceAdapter;
+    private PlaceSearchAdapter mPlaceAdapter;
     private ResultReceiver mReceiver;
     protected final String TAG = this.getClass().getSimpleName();
 
 
-    public GooglePlacesHelper(GoogleApiClient apiClient, ResultReceiver receiver, PlaceAutocompleteAdapter adapter){
+    public SuggestionListener(GoogleApiClient apiClient, ResultReceiver receiver, PlaceSearchAdapter adapter) {
         mGoogleApiClient = apiClient;
         mReceiver = receiver;
         mPlaceAdapter = adapter;
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-/*
-             Retrieve the place ID of the selected item from the Adapter.
-             The adapter stores each Place suggestion in a PlaceAutocomplete object from which we
-             read the place ID.
-              */
-        final PlaceAutocompleteAdapter.PlaceAutocomplete item = mPlaceAdapter.getItem(i);
-        final String placeId = String.valueOf(item.placeId);
-        Log.i(TAG, "Autocomplete item selected: " + item.description);
 
-            /*
-             Issue a request to the Places Geo Data API to retrieve a Place object with additional
-              details about the place.
-              */
+    @Override
+    public boolean onSuggestionSelect(int position) {
+
+        final String placeId = mPlaceAdapter.getPlaceId(position);
+
         PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
                 .getPlaceById(mGoogleApiClient, placeId);
         placeResult.setResultCallback(this);
 
-        Log.i(TAG, "Called getPlaceById to get Place details for " + item.placeId);
+        Log.i(TAG, "Called getPlaceById to get Place details for " + placeId);
+
+        return false;
     }
+
+    @Override
+    public boolean onSuggestionClick(int position) {
+
+        final String placeId = mPlaceAdapter.getPlaceId(position);
+
+        PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
+                .getPlaceById(mGoogleApiClient, placeId);
+        placeResult.setResultCallback(this);
+
+        Log.i(TAG, "Called getPlaceById to get Place details for " + placeId);
+        return true;
+    }
+
 
     @Override
     public void onResult(PlaceBuffer places) {

@@ -1,17 +1,24 @@
-package com.cuong.futurenav.activity;
+package com.cuong.futurenav.activity.adapter;
 
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.util.Util;
 import com.cuong.futurenav.R;
+import com.cuong.futurenav.activity.BaseAppCompatActivity;
+import com.cuong.futurenav.activity.DetailActivity;
 import com.cuong.futurenav.model.FavSchoolModel;
+import com.cuong.futurenav.model.SchoolModel;
+import com.cuong.futurenav.util.Constants;
 
 import java.util.ArrayList;
 
@@ -66,26 +73,28 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.FavoriteVi
 
             view.setFocusable(true);
 
-//            view.setOnClickListener(new View.OnClickListener() {
-//                                        @Override
-//                                        public void onClick(View view) {
-//                                            int position = holder.getAdapterPosition();
-//                                            SchoolModel school = mSchools.get(position);
-//                                            Intent intent = new Intent(mContext, SchoolDetailActivity.class);
-//                                            intent.putExtra(Util.EXTRA_SCHOOL, school);
-//                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//                                                ActivityOptionsCompat options = ActivityOptionsCompat.
-//                                                        makeSceneTransitionAnimation((MyAppCompatActivity)mContext, view, mContext.getString(R.string.activity_trans));
-//                                                mContext.startActivity(intent, options.toBundle());
-//                                            }
-//                                            else {
-//                                                mContext.startActivity(intent);
-//                                            }
-//
-//
-//                                        }
-//                                    }
-//            );
+            view.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+
+                                            int position = holder.getAdapterPosition();
+                                            SchoolModel school = mSchools.get(position).getSchool();
+
+                                            Intent intent = new Intent(mContext, DetailActivity.class);
+                                            intent.putExtra(Constants.EXTRA_SCHOOL_DETAIL, school);
+
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                                ActivityOptionsCompat options = ActivityOptionsCompat.
+                                                        makeSceneTransitionAnimation((BaseAppCompatActivity)mContext, view, mContext.getString(R.string.activity_trans));
+                                                mContext.startActivity(intent, options.toBundle());
+                                            }
+                                            else {
+                                                mContext.startActivity(intent);
+                                            }
+
+                                        }
+                                    }
+            );
 
 
             return holder;
@@ -133,7 +142,36 @@ public class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.FavoriteVi
 
     @Override
     public long getItemId(int position) {
+        return mSchools.get(position).getId().longValue();
+    }
+
+    public Integer getFavId(int position) {
         return mSchools.get(position).getId();
+    }
+
+
+    public int getPosition(int schoolId){
+        int p = -1;
+        for (FavSchoolModel m : mSchools){
+            if (schoolId == m.getSchool().getId().intValue()) {
+                p = mSchools.indexOf(m);
+                break;
+            }
+
+        }
+        return p;
+    }
+
+    public SchoolModel getSchoolFromSchoolId(int schoolId){
+        SchoolModel s = null;
+        for (FavSchoolModel m : mSchools){
+            if (schoolId == m.getSchool().getId().intValue()) {
+                s = m.getSchool();
+                break;
+            }
+
+        }
+        return s;
     }
 
 
